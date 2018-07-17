@@ -223,6 +223,7 @@ static void* xio_CloneOption(const char* name, const void* value)
         }
         else
         {
+printf("JMF: #2\n");
             LogError("unknown option: %s", name);
             result = NULL;
         }
@@ -248,6 +249,7 @@ static void xio_DestroyOption(const char* name, const void* value)
         }
         else
         {
+printf("JMF: #3\n");
             LogError("unknown option: %s", name);
         }
     }

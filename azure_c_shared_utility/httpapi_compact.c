@@ -694,11 +694,17 @@ static HTTPAPI_RESULT OpenXIOConnection(HTTP_HANDLE_DATA* http_instance)
 
     if (http_instance->is_connected != 0)
     {
+printf("JMF: return HTTPAPI_OK from OpenXIOConnection\n");
         /*Codes_SRS_HTTPAPI_COMPACT_21_033: [ If the whole process succeed, the HTTPAPI_ExecuteRequest shall retur HTTPAPI_OK. ]*/
         result = HTTPAPI_OK;
     }
     else
     {
+printf("JMF: OpenXIOConnection says we are not connected...\n");
+printf("JMF: http_instance->certificate=%s\n",(http_instance->certificate == NULL)? "missing":"AVAILABLE");
+printf("JMF: http_instance->x509ClientCertificate=%s\n", (http_instance->x509ClientCertificate == NULL)? "missing":"AVAILABLE");
+printf("JMF: http_instance->x509ClientPrivateKey=%s\n", (http_instance->x509ClientPrivateKey == NULL)? "missing":"AVAILABLE");
+
         http_instance->is_io_error = 0;
 
         /*Codes_SRS_HTTPAPI_COMPACT_21_022: [ If a Certificate was provided, the HTTPAPI_ExecuteRequest shall set this option on the transport layer. ]*/
@@ -761,12 +767,14 @@ static HTTPAPI_RESULT OpenXIOConnection(HTTP_HANDLE_DATA* http_instance)
             }
         }
     }
+printf("JMF: OpenXIOConnection #2...\n");
 
     if ((http_instance->is_io_error != 0) && (result == HTTPAPI_OK))
     {
         /*Codes_SRS_HTTPAPI_COMPACT_21_025: [ If the open process failed, the HTTPAPI_ExecuteRequest shall not send any request and return HTTPAPI_OPEN_REQUEST_FAILED. ]*/
         result = HTTPAPI_OPEN_REQUEST_FAILED;
     }
+printf("JMF: OpenXIOConnection #3...\n");
 
     return result;
 }
@@ -1332,6 +1340,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
     {
         /*Codes_SRS_HTTPAPI_COMPACT_21_063: [ If the HTTP do not support the optionName, the HTTPAPI_SetOption shall return HTTPAPI_INVALID_ARG. ]*/
         result = HTTPAPI_INVALID_ARG;
+printf("JMF: #1\n");
         LogInfo("unknown option %s", optionName);
     }
     return result;
@@ -1411,6 +1420,7 @@ HTTPAPI_RESULT HTTPAPI_CloneOption(const char* optionName, const void* value, co
     {
         /*Codes_SRS_HTTPAPI_COMPACT_21_071: [ If the HTTP do not support the optionName, the HTTPAPI_CloneOption shall return HTTPAPI_INVALID_ARG. ]*/
         result = HTTPAPI_INVALID_ARG;
+printf("JMF: #4, %s\n",optionName);
         LogInfo("unknown option %s", optionName);
     }
     return result;

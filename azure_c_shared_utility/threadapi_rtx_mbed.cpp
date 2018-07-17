@@ -37,31 +37,35 @@ static void thread_wrapper(const void* createParamArg)
 THREADAPI_RESULT ThreadAPI_Create(THREAD_HANDLE* threadHandle, THREAD_START_FUNC func, void* arg)
 {
     THREADAPI_RESULT result;
-    if ((threadHandle == NULL) || (func == NULL)) {
+    if ((threadHandle == NULL) ||
+        (func == NULL))
+    {
         result = THREADAPI_INVALID_ARG;
         LogError("(result = %s)", ENUM_TO_STRING(THREADAPI_RESULT, result));
-        }
-    else{
+    }
+    else
+    {
         size_t slot;
-        for (slot = 0; slot < MAX_THREADS; slot++) {
+        for (slot = 0; slot < MAX_THREADS; slot++)
+        {
             if (threads[slot].id == NULL)
                 break;
-            }
+        }
 
-        if (slot < MAX_THREADS) {
+        if (slot < MAX_THREADS)
+        {
             create_param* param = (create_param*)malloc(sizeof(create_param));
-            if (param != NULL) {
+            if (param != NULL)
+            {
                 param->func = func;
                 param->arg = arg;
                 param->p_thread = threads + slot;
-//jmf                threads[slot].thrd = new Thread(thread_wrapper, param, osPriorityNormal, STACK_SIZE);
-                threads[slot].thrd = new Thread;
-                threads[slot].thrd->start(callback(thread_wrapper, param));
-
+                threads[slot].thrd = new Thread(thread_wrapper, param, osPriorityNormal, STACK_SIZE);
                 *threadHandle = (THREAD_HANDLE)(threads + slot);
                 result = THREADAPI_OK;
             }
-            else {
+            else
+            {
                 result = THREADAPI_NO_MEMORY;
                 LogError("(result = %s)", ENUM_TO_STRING(THREADAPI_RESULT, result));
             }

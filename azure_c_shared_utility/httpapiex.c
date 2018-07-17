@@ -601,6 +601,7 @@ HTTPAPIEX_RESULT HTTPAPIEX_SetOption(HTTPAPIEX_HANDLE handle, const char* option
 
         /*Codes_SRS_HTTPAPIEX_02_037: [HTTPAPIEX_SetOption shall attempt to save the value of the option by calling HTTPAPI_CloneOption passing optionName and value, irrespective of the existence of a HTTPAPI_HANDLE] */
         saveOptionResult = HTTPAPI_CloneOption(optionName, value, &savedOption);
+printf("JMF: call HTTPAPI_CloneOption, it returned %d\n",saveOptionResult);
 
         if(saveOptionResult == HTTPAPI_INVALID_ARG)
         {

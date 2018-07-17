@@ -6,6 +6,7 @@
 #include "azure_c_shared_utility/optimize_size.h"
 #include "azure_c_shared_utility/xio.h"
 #include "azure_c_shared_utility/tlsio_mbedtls.h"
+#include "NTPClient.h"
 
 extern "C" const IO_INTERFACE_DESCRIPTION* tlsio_mbedtls_get_interface_description(void);
 
@@ -14,7 +15,9 @@ int platform_init(void)
     NetworkInterface *network = easy_connect(true);
     if (!network) 
         return __FAILURE__;
-        
+
+    NTPClient ntp(network);
+
     return 0;
 }
 
@@ -34,4 +37,3 @@ void platform_deinit(void)
 {
     return;
 }
-
