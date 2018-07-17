@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // DEPRECATED: the USE_MBED_TLS #define is deprecated.
-//#ifdef USE_MBED_TLS
+#ifdef USE_MBED_TLS
 
 #include <stdlib.h>
 
@@ -241,7 +241,7 @@ static int on_io_recv(void *context, unsigned char *buf, size_t sz)
     }
 
     result = tls_io_instance->socket_io_read_byte_count;
-    if (result > (int)sz)
+    if (result > sz)
     {
         result = sz;
     }
@@ -557,7 +557,7 @@ int tlsio_mbedtls_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t siz
             tls_io_instance->on_send_complete_callback_context = callback_context;
 
             int res = mbedtls_ssl_write(&tls_io_instance->ssl, buffer, size);
-            if (res != (int)size)
+            if (res != size)
             {
                 result = __FAILURE__;
             }
@@ -752,4 +752,4 @@ int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
 }
 
 // DEPRECATED: the USE_MBED_TLS #define is deprecated.
-//#endif // USE_MBED_TLS
+#endif // USE_MBED_TLS

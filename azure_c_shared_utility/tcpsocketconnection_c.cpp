@@ -63,5 +63,6 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketConnectionHa
 
 int tcpsocketconnection_receive_all(TCPSOCKETCONNECTION_HANDLE tcpSocketConnectionHandle, char* data, int length)
 {
-	return 0;
+	TCPSocket* tsc = (TCPSocket*)tcpSocketConnectionHandle;
+	return tsc->recv(data, length);
 }
