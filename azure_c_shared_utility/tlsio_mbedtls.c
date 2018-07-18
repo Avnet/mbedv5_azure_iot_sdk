@@ -731,6 +731,10 @@ int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
                 int parse_result = mbedtls_x509_crt_parse(&tls_io_instance->trusted_certificates_parsed, (const unsigned char *)value, (int)(strlen(value) + 1));
                 if (parse_result != 0)
                 {
+char buf[125];
+printf("JMF: parse_result = %d (%d)\n",parse_result,-parse_result);
+mbedtls_strerror(parse_result,buf,125);
+printf("JMF: mbedtsl_strerror = %s\n",buf);
                     LogInfo("Malformed pem certificate");
                     result = __FAILURE__;
                 }
