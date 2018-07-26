@@ -15,8 +15,8 @@ double get_difftime(time_t stopTime, time_t startTime)
 
 struct tm* get_gmtime(time_t* currentTime)
 {
-    struct tm *result;
-    return gmtime_r(currentTime, result);
+    struct tm result;
+    return gmtime_r(currentTime, &result);
 }
 
 char* get_ctime(time_t* timeToGet)
