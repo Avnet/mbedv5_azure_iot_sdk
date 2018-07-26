@@ -12,24 +12,20 @@
 
 COND_HANDLE Condition_Init(void)
 {
-    FUNC_TR;
     return NULL;
 }
 
 COND_RESULT Condition_Post(COND_HANDLE handle)
 {
-    FUNC_TR;
     return (handle == NULL)? COND_INVALID_ARG:COND_ERROR;
 }
 
 COND_RESULT Condition_Wait(COND_HANDLE  handle, LOCK_HANDLE lock, int timeout_milliseconds)
 {
-    FUNC_TR;
     return (handle == NULL)? COND_INVALID_ARG:COND_ERROR;
 }
 
 void Condition_Deinit(COND_HANDLE handle)
 {
-    FUNC_TR;
     return;
 }

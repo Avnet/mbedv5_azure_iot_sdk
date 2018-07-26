@@ -10,7 +10,6 @@
 
 TICK_COUNTER_HANDLE tickcounter_create(void)
 {
-    FUNC_TR;
     Timer* t = new Timer;
     t->start();
     return t;
@@ -18,7 +17,6 @@ TICK_COUNTER_HANDLE tickcounter_create(void)
 
 void tickcounter_destroy(TICK_COUNTER_HANDLE tick_counter)
 {
-    FUNC_TR;
     Timer* t = (Timer*)tick_counter;
     if (t != NULL)
         delete tick_counter;
@@ -26,7 +24,6 @@ void tickcounter_destroy(TICK_COUNTER_HANDLE tick_counter)
 
 int tickcounter_get_current_ms(TICK_COUNTER_HANDLE tick_counter, tickcounter_ms_t * current_ms)
 {
-    FUNC_TR;
     Timer* t = (Timer*)tick_counter;
     if (t == NULL || current_ms == NULL)
         return __FAILURE__;

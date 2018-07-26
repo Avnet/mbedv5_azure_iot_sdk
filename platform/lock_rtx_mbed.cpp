@@ -12,14 +12,12 @@
 
 LOCK_HANDLE Lock_Init(void)
 {
-    FUNC_TR;
     Mutex* result = new Mutex();
     return (LOCK_HANDLE)result;
 }
 
 LOCK_RESULT Lock(LOCK_HANDLE handle)
 {
-    FUNC_TR;
     Mutex* lock_mtx = (Mutex*)handle;
     if (lock_mtx == NULL)
         return LOCK_ERROR;
@@ -29,7 +27,6 @@ LOCK_RESULT Lock(LOCK_HANDLE handle)
 
 LOCK_RESULT Unlock(LOCK_HANDLE handle)
 {
-    FUNC_TR;
     Mutex* lock_mtx = (Mutex*)handle;
     if (lock_mtx == NULL)
         return LOCK_ERROR;
@@ -39,7 +36,6 @@ LOCK_RESULT Unlock(LOCK_HANDLE handle)
 
 LOCK_RESULT Lock_Deinit(LOCK_HANDLE handle)
 {
-    FUNC_TR;
     Mutex* lock_mtx = (Mutex*)handle;
     if (lock_mtx == NULL)
         return LOCK_ERROR;

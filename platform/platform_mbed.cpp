@@ -16,7 +16,6 @@ NetworkInterface* platform_network;
 
 int platform_init(void)
 {
-    FUNC_TR;
     platform_network = easy_connect(true);
     if (!platform_network) 
         return __FAILURE__;
@@ -31,13 +30,11 @@ int platform_init(void)
 
 STRING_HANDLE platform_get_platform_info(void)
 {
-    FUNC_TR;
     // Expected format: "(<runtime name>; <operating system name>; <platform>)"
     return STRING_construct("(native; mbed v5.x; undefined)");
 }
 
 void platform_deinit(void)
 {
-    FUNC_TR;
     return;
 }
