@@ -19,10 +19,6 @@
 #define UNABLE_TO_COMPLETE          -2
 #define MBED_RECEIVE_BYTES_VALUE    128
 
-#define TOSTR(x)   #x
-#define NBR2STR(x) TOSTR(x)
-#define MK_ERROR_CONTEXT   "ON_IO_ERROR - FILE: " __FILE__ ", L#" NBR2STR(__LINE__)"\n"
-
 static OPTIONHANDLER_HANDLE socketio_retrieveoptions(CONCRETE_IO_HANDLE socket_io);
 
 typedef enum IO_STATE_TAG
@@ -74,7 +70,6 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 //
 static void* socketio_CloneOption(const char* name, const void* value)
 {
-    FUNC_TR;
     /* Not implementing any options */
     (void)name;
     (void)value;
@@ -83,7 +78,6 @@ static void* socketio_CloneOption(const char* name, const void* value)
 
 static void socketio_DestroyOption(const char* name, const void* value)
 {
-    FUNC_TR;
     /* Not implementing any options */
     (void)name;
     (void)value;
@@ -92,7 +86,6 @@ static void socketio_DestroyOption(const char* name, const void* value)
 
 static OPTIONHANDLER_HANDLE socketio_retrieveoptions(CONCRETE_IO_HANDLE socket_io)
 {
-    FUNC_TR;
     /* Not implementing any options */
     (void)socket_io;
     return NULL;
@@ -100,27 +93,23 @@ static OPTIONHANDLER_HANDLE socketio_retrieveoptions(CONCRETE_IO_HANDLE socket_i
 
 int socketio_setoption(CONCRETE_IO_HANDLE socket_io, const char* optionName, const void* value)
 {
-    FUNC_TR;
     /* Not implementing any options */
     return __FAILURE__;
 }
 
 const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void)
 {
-    FUNC_TR;
     return &socket_io_interface_description;
 }
 
 static void indicate_error(SOCKET_IO_INSTANCE* psock)
 {
-    FUNC_TR;
     if (psock->on_io_error != NULL)
         psock->on_io_error(psock->on_io_error_context);
 }
 
 static int add_pending_io(SOCKET_IO_INSTANCE* psock, const unsigned char* buffer, size_t size, ON_SEND_COMPLETE on_send_complete, void* callback_context)
 {
-    FUNC_TR;
     PENDING_SOCKET_IO* p_socket_io = (PENDING_SOCKET_IO*)malloc(sizeof(PENDING_SOCKET_IO));
     if (p_socket_io == NULL)
         return __FAILURE__;
@@ -147,7 +136,6 @@ static int add_pending_io(SOCKET_IO_INSTANCE* psock, const unsigned char* buffer
 
 CONCRETE_IO_HANDLE socketio_create(void* io_create_parameters)
 {
-    FUNC_TR;
     SOCKETIO_CONFIG* socket_io_config = (SOCKETIO_CONFIG*)io_create_parameters;
     SOCKET_IO_INSTANCE* iop = (SOCKET_IO_INSTANCE*)malloc(sizeof(SOCKET_IO_INSTANCE));
 
@@ -177,7 +165,6 @@ CONCRETE_IO_HANDLE socketio_create(void* io_create_parameters)
 
 void socketio_destroy(CONCRETE_IO_HANDLE socket_io)
 {
-    FUNC_TR;
     if (socket_io == NULL)
         return;
 
@@ -206,7 +193,6 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                   void* on_io_open_complete_context, ON_BYTES_RECEIVED on_bytes_received, 
                   void* on_bytes_received_context, ON_IO_ERROR on_io_error, void* on_io_error_context)
 {
-    FUNC_TR;
     SOCKET_IO_INSTANCE* psock = (SOCKET_IO_INSTANCE*)socket_io;
     if (socket_io == NULL) 
         return __FAILURE__;
@@ -238,7 +224,6 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
 
 int socketio_close(CONCRETE_IO_HANDLE socket_io, void (*on_io_close_complete)(void*), void* callback_context)
 {
-    FUNC_TR;
     int result = 0;
 
     if (socket_io == NULL)
@@ -260,7 +245,6 @@ int socketio_close(CONCRETE_IO_HANDLE socket_io, void (*on_io_close_complete)(vo
 
 int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size, ON_SEND_COMPLETE on_send_complete, void* callback_context)
 {
-    FUNC_TR;
     int result;
 
     if ((socket_io == NULL) || (buffer == NULL) || (size == 0))
@@ -300,7 +284,6 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
 
 void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
 {
-    FUNC_TR;
     int received = 1;
 
     if (socket_io == NULL)
@@ -315,7 +298,6 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
         PENDING_SOCKET_IO* p_socket_io = (PENDING_SOCKET_IO*)singlylinkedlist_item_get_value(first_pending_io);
         if (p_socket_io == NULL) {
             psock->io_state = IO_STATE_ERROR;
-printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
             indicate_error(psock);
             break;
             }
@@ -329,8 +311,6 @@ printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
                 if (send_result < UNABLE_TO_COMPLETE) {
                     // Bad error.  Indicate as much.
                     psock->io_state = IO_STATE_ERROR;
-                    printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
-                    printf("JMF: send_result=%d\n",send_result);
                     indicate_error(psock);
                     }
                 break;
@@ -348,7 +328,6 @@ printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
             free(p_socket_io);
             if (singlylinkedlist_remove(psock->pending_io_list, first_pending_io) != 0) {
                 psock->io_state = IO_STATE_ERROR;
-printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
                 indicate_error(psock);
                 }
             }
@@ -359,7 +338,6 @@ printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
         unsigned char* recv_bytes = (unsigned char*)malloc(MBED_RECEIVE_BYTES_VALUE);
         if (recv_bytes == NULL) {
             LogError("Socketio_Failure: NULL allocating input buffer.");
-printf("\nJMF: on_io_error @ " MK_ERROR_CONTEXT);
             indicate_error(psock);
             }
         else {

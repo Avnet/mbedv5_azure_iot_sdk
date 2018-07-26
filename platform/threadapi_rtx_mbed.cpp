@@ -29,7 +29,6 @@ typedef struct _create_param
 
 static void thread_wrapper(const void* createParamArg)
 {
-    FUNC_TR;
     const create_param* p = (const create_param*)createParamArg;
     p->p_thread->id = Thread::gettid();
     (*(p->func))((void*)p->arg);
@@ -38,7 +37,6 @@ static void thread_wrapper(const void* createParamArg)
 
 THREADAPI_RESULT ThreadAPI_Create(THREAD_HANDLE* threadHandle, THREAD_START_FUNC func, void* arg)
 {
-    FUNC_TR;
     THREADAPI_RESULT result;
     if ((threadHandle == NULL) || (func == NULL)) {
         result = THREADAPI_INVALID_ARG;
@@ -79,7 +77,6 @@ THREADAPI_RESULT ThreadAPI_Create(THREAD_HANDLE* threadHandle, THREAD_START_FUNC
 
 THREADAPI_RESULT ThreadAPI_Join(THREAD_HANDLE thr, int *res)
 {
-    FUNC_TR;
     THREADAPI_RESULT result = THREADAPI_OK;
     mbedThread* p = (mbedThread*)thr;
     if (p) {
@@ -104,7 +101,6 @@ THREADAPI_RESULT ThreadAPI_Join(THREAD_HANDLE thr, int *res)
 
 void ThreadAPI_Exit(int res)
 {
-    FUNC_TR;
     mbedThread* p;
     for (p = threads; p < &threads[MAX_THREADS]; p++) {
         if (p->id == Thread::gettid()) {
@@ -116,7 +112,6 @@ void ThreadAPI_Exit(int res)
 
 void ThreadAPI_Sleep(unsigned int millisec)
 {
-    FUNC_TR;
     //
     // The timer on mbed seems to wrap around 65 seconds. Hmmm.
     // So we will do our waits in increments of 30 seconds.

@@ -27,10 +27,6 @@
 
 #define OPTION_UNDERLYING_IO_OPTIONS        "underlying_io_options"
 
-#define TOSTR(x)   #x
-#define NBR2STR(x) TOSTR(x)
-#define MK_ERROR_CONTEXT   "ON_IO_ERROR - FILE: " __FILE__ ", L#" NBR2STR(__LINE__)"\n"
-
 int                  tlsio_mbedtls_open(CONCRETE_IO_HANDLE, ON_IO_OPEN_COMPLETE, void*, ON_BYTES_RECEIVED, void*, ON_IO_ERROR, void*);
 static void          on_underlying_io_close_complete_during_close(void*);
 static int           on_io_send(void *, const unsigned char *, size_t);
@@ -91,7 +87,6 @@ static const IO_INTERFACE_DESCRIPTION tlsio_mbedtls_interface_description =
 
 static void indicate_error(TLS_IO_INSTANCE* tls_io_instance)
 {
-    FUNC_TR;
     if (tls_io_instance->on_io_error != NULL)
     {
         tls_io_instance->on_io_error(tls_io_instance->on_io_error_context);
@@ -100,7 +95,6 @@ static void indicate_error(TLS_IO_INSTANCE* tls_io_instance)
 
 static void indicate_open_complete(TLS_IO_INSTANCE* tls_io_instance, IO_OPEN_RESULT open_result)
 {
-    FUNC_TR;
     if (tls_io_instance->on_io_open_complete != NULL)
     {
         tls_io_instance->on_io_open_complete(tls_io_instance->on_io_open_complete_context, open_result);
@@ -109,7 +103,6 @@ static void indicate_open_complete(TLS_IO_INSTANCE* tls_io_instance, IO_OPEN_RES
 
 static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
 {
-    FUNC_TR;
     int result = 0;
     unsigned char buffer[64];
     int rcv_bytes = 1;
@@ -131,7 +124,6 @@ static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
 
 static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT open_result)
 {
-    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     int result = 0;
 
@@ -165,7 +157,6 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT open_re
 
 static void on_underlying_io_bytes_received(void* context, const unsigned char* buffer, size_t size)
 {
-    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     unsigned char* new_socket_io_read_bytes = (unsigned char*)realloc(tls_io_instance->socket_io_read_bytes, tls_io_instance->socket_io_read_byte_count + size);
@@ -173,7 +164,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
     if (new_socket_io_read_bytes == NULL)
     {
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
-printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
         indicate_error(tls_io_instance);
     }
     else
@@ -186,7 +176,6 @@ printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
 
 static void on_underlying_io_error(void* context)
 {
-    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     switch (tls_io_instance->tlsio_state)
@@ -207,7 +196,6 @@ static void on_underlying_io_error(void* context)
 
     case TLSIO_STATE_OPEN:
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
-printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
         indicate_error(tls_io_instance);
         break;
     }
@@ -215,7 +203,6 @@ printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
 
 static void on_underlying_io_close_complete_during_close(void* context)
 {
-    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
@@ -228,7 +215,6 @@ static void on_underlying_io_close_complete_during_close(void* context)
 
 static int on_io_recv(void *context, unsigned char *buf, size_t sz)
 {
-    FUNC_TR;
     int result;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     unsigned char* new_socket_io_read_bytes;
@@ -279,14 +265,12 @@ static int on_io_recv(void *context, unsigned char *buf, size_t sz)
 
 static int on_io_send(void *context, const unsigned char *buf, size_t sz)
 {
-    FUNC_TR;
     int result;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     if (xio_send(tls_io_instance->socket_io, buf, sz, tls_io_instance->on_send_complete, tls_io_instance->on_send_complete_callback_context) != 0)
     {
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
-printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
         indicate_error(tls_io_instance);
         result = 0;
     }
@@ -300,7 +284,6 @@ printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
 
 static int tlsio_entropy_poll(void *v, unsigned char *output, size_t len, size_t *olen)
 {
-    FUNC_TR;
     srand(time(NULL));
     char *c = (char*)malloc(len);
     memset(c, 0, len);
@@ -316,7 +299,6 @@ static int tlsio_entropy_poll(void *v, unsigned char *output, size_t len, size_t
 
 static void mbedtls_init(void *instance, const char *host) 
 {
-    FUNC_TR;
     TLS_IO_INSTANCE *result = (TLS_IO_INSTANCE *)instance;
     char *pers = "azure_iot_client";
 
@@ -342,7 +324,6 @@ static void mbedtls_init(void *instance, const char *host)
 
 CONCRETE_IO_HANDLE tlsio_mbedtls_create(void* io_create_parameters)
 {
-    FUNC_TR;
     TLSIO_CONFIG* tls_io_config = io_create_parameters;
     TLS_IO_INSTANCE* result;
 
@@ -424,7 +405,6 @@ CONCRETE_IO_HANDLE tlsio_mbedtls_create(void* io_create_parameters)
 
 void tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE tls_io)
 {
-    FUNC_TR;
     if (tls_io != NULL)
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
@@ -455,7 +435,6 @@ void tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE tls_io)
 
 int tlsio_mbedtls_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open_complete, void* on_io_open_complete_context, ON_BYTES_RECEIVED on_bytes_received, void* on_bytes_received_context, ON_IO_ERROR on_io_error, void* on_io_error_context)
 {
-    FUNC_TR;
     int result = 0;
 
     if (tls_io == NULL)
@@ -503,7 +482,6 @@ int tlsio_mbedtls_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
 
 int tlsio_mbedtls_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_close_complete, void* callback_context)
 {
-    FUNC_TR;
     int result = 0;
 
     if (tls_io == NULL)
@@ -542,7 +520,6 @@ int tlsio_mbedtls_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_cl
 
 int tlsio_mbedtls_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t size, ON_SEND_COMPLETE on_send_complete, void* callback_context)
 {
-    FUNC_TR;
     int result;
 
     if (tls_io == NULL)
@@ -579,7 +556,6 @@ int tlsio_mbedtls_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t siz
 
 void tlsio_mbedtls_dowork(CONCRETE_IO_HANDLE tls_io)
 {
-    FUNC_TR;
     if (tls_io != NULL)
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
@@ -595,20 +571,17 @@ void tlsio_mbedtls_dowork(CONCRETE_IO_HANDLE tls_io)
 
 const IO_INTERFACE_DESCRIPTION* tlsio_mbedtls_get_interface_description(void)
 {
-    FUNC_TR;
     return &tlsio_mbedtls_interface_description;
 }
 
 const IO_INTERFACE_DESCRIPTION* platform_get_default_tlsio(void)
 {
-    FUNC_TR;
     return tlsio_mbedtls_get_interface_description();
 }
 
 /*this function will clone an option given by name and value*/
 static void* tlsio_mbedtls_CloneOption(const char* name, const void* value)
 {
-    FUNC_TR;
     void* result;
     if (
         (name == NULL) || (value == NULL)
@@ -647,7 +620,6 @@ static void* tlsio_mbedtls_CloneOption(const char* name, const void* value)
 /*this function destroys an option previously created*/
 static void tlsio_mbedtls_DestroyOption(const char* name, const void* value)
 {
-    FUNC_TR;
     /*since all options for this layer are actually string copies., disposing of one is just calling free*/
     if (name == NULL || value == NULL)
     {
@@ -672,7 +644,6 @@ static void tlsio_mbedtls_DestroyOption(const char* name, const void* value)
 
 OPTIONHANDLER_HANDLE tlsio_mbedtls_retrieveoptions(CONCRETE_IO_HANDLE handle)
 {
-    FUNC_TR;
     OPTIONHANDLER_HANDLE result;
     if (handle == NULL)
     {
@@ -720,7 +691,6 @@ OPTIONHANDLER_HANDLE tlsio_mbedtls_retrieveoptions(CONCRETE_IO_HANDLE handle)
 
 int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, const void* value)
 {
-    FUNC_TR;
     int result;
 
     if (tls_io == NULL || optionName == NULL)
