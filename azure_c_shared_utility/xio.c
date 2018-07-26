@@ -37,16 +37,12 @@ XIO_HANDLE xio_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, 
     {
         xio_instance = (XIO_INSTANCE*)malloc(sizeof(XIO_INSTANCE));
 
-        /* Codes_SRS_XIO_01_017: [If allocating the memory needed for the IO interface fails then xio_create shall return NULL.] */
         if (xio_instance != NULL)
         {
-            /* Codes_SRS_XIO_01_001: [xio_create shall return on success a non-NULL handle to a new IO interface.] */
             xio_instance->io_interface_description = io_interface_description;
 
-            /* Codes_SRS_XIO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the xio_create_parameters argument.] */
             xio_instance->concrete_xio_handle = xio_instance->io_interface_description->concrete_io_create((void*)xio_create_parameters);
 
-            /* Codes_SRS_XIO_01_016: [If the underlying concrete_io_create call fails, xio_create shall return NULL.] */
             if (xio_instance->concrete_xio_handle == NULL)
             {
                 free(xio_instance);
@@ -223,7 +219,6 @@ static void* xio_CloneOption(const char* name, const void* value)
         }
         else
         {
-printf("JMF: #2\n");
             LogError("unknown option: %s", name);
             result = NULL;
         }
@@ -249,7 +244,6 @@ static void xio_DestroyOption(const char* name, const void* value)
         }
         else
         {
-printf("JMF: #3\n");
             LogError("unknown option: %s", name);
         }
     }

@@ -6,16 +6,6 @@
 
 #include <stdlib.h>
 
-#ifdef TIZENRT
-#include "tls/config.h"
-#include "tls/debug.h"
-#include "tls/ssl.h"
-#include "tls/entropy.h"
-#include "tls/ctr_drbg.h"
-#include "tls/error.h"
-#include "tls/certs.h"
-#include "tls/entropy_poll.h"
-#else
 #include "mbedtls/config.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
@@ -24,22 +14,33 @@
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/entropy_poll.h"
-#endif
+#include "mylog.h"
 
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include "azure_c_shared_utility/optimize_size.h"
 #include "azure_c_shared_utility/tlsio.h"
-#include "azure_c_shared_utility/tlsio_mbedtls.h"
 #include "azure_c_shared_utility/socketio.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "azure_c_shared_utility/shared_util_options.h"
 
 #define OPTION_UNDERLYING_IO_OPTIONS        "underlying_io_options"
 
-// DEPRECATED: debug functions do not belong in the tree.
-#define MBED_TLS_DEBUG_ENABLE
+#define TOSTR(x)   #x
+#define NBR2STR(x) TOSTR(x)
+#define MK_ERROR_CONTEXT   "ON_IO_ERROR - FILE: " __FILE__ ", L#" NBR2STR(__LINE__)"\n"
+
+int                  tlsio_mbedtls_open(CONCRETE_IO_HANDLE, ON_IO_OPEN_COMPLETE, void*, ON_BYTES_RECEIVED, void*, ON_IO_ERROR, void*);
+static void          on_underlying_io_close_complete_during_close(void*);
+static int           on_io_send(void *, const unsigned char *, size_t);
+OPTIONHANDLER_HANDLE tlsio_mbedtls_retrieveoptions(CONCRETE_IO_HANDLE);
+CONCRETE_IO_HANDLE   tlsio_mbedtls_create(void*);
+void                 tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE);
+void                 tlsio_mbedtls_dowork(CONCRETE_IO_HANDLE);
+int                  tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE, const char*, const void*);
+int                  tlsio_mbedtls_close(CONCRETE_IO_HANDLE, ON_IO_CLOSE_COMPLETE, void*);
+int                  tlsio_mbedtls_send(CONCRETE_IO_HANDLE, const void*, size_t, ON_SEND_COMPLETE, void*);
 
 typedef enum TLSIO_STATE_ENUM_TAG
 {
@@ -88,17 +89,9 @@ static const IO_INTERFACE_DESCRIPTION tlsio_mbedtls_interface_description =
     tlsio_mbedtls_setoption
 };
 
-// DEPRECATED: debug functions do not belong in the tree.
-#if defined (MBED_TLS_DEBUG_ENABLE)
-void mbedtls_debug(void *ctx, int level, const char *file, int line, const char *str)
-{
-    ((void)level);
-    printf("%s (%d): %s\r\n", file, line, str);
-}
-#endif
-
 static void indicate_error(TLS_IO_INSTANCE* tls_io_instance)
 {
+    FUNC_TR;
     if (tls_io_instance->on_io_error != NULL)
     {
         tls_io_instance->on_io_error(tls_io_instance->on_io_error_context);
@@ -107,6 +100,7 @@ static void indicate_error(TLS_IO_INSTANCE* tls_io_instance)
 
 static void indicate_open_complete(TLS_IO_INSTANCE* tls_io_instance, IO_OPEN_RESULT open_result)
 {
+    FUNC_TR;
     if (tls_io_instance->on_io_open_complete != NULL)
     {
         tls_io_instance->on_io_open_complete(tls_io_instance->on_io_open_complete_context, open_result);
@@ -115,6 +109,7 @@ static void indicate_open_complete(TLS_IO_INSTANCE* tls_io_instance, IO_OPEN_RES
 
 static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
 {
+    FUNC_TR;
     int result = 0;
     unsigned char buffer[64];
     int rcv_bytes = 1;
@@ -136,6 +131,7 @@ static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
 
 static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT open_result)
 {
+    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     int result = 0;
 
@@ -169,6 +165,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT open_re
 
 static void on_underlying_io_bytes_received(void* context, const unsigned char* buffer, size_t size)
 {
+    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     unsigned char* new_socket_io_read_bytes = (unsigned char*)realloc(tls_io_instance->socket_io_read_bytes, tls_io_instance->socket_io_read_byte_count + size);
@@ -176,6 +173,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
     if (new_socket_io_read_bytes == NULL)
     {
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
+printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
         indicate_error(tls_io_instance);
     }
     else
@@ -188,6 +186,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
 
 static void on_underlying_io_error(void* context)
 {
+    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     switch (tls_io_instance->tlsio_state)
@@ -208,6 +207,7 @@ static void on_underlying_io_error(void* context)
 
     case TLSIO_STATE_OPEN:
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
+printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
         indicate_error(tls_io_instance);
         break;
     }
@@ -215,6 +215,7 @@ static void on_underlying_io_error(void* context)
 
 static void on_underlying_io_close_complete_during_close(void* context)
 {
+    FUNC_TR;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
@@ -227,6 +228,7 @@ static void on_underlying_io_close_complete_during_close(void* context)
 
 static int on_io_recv(void *context, unsigned char *buf, size_t sz)
 {
+    FUNC_TR;
     int result;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     unsigned char* new_socket_io_read_bytes;
@@ -241,7 +243,7 @@ static int on_io_recv(void *context, unsigned char *buf, size_t sz)
     }
 
     result = tls_io_instance->socket_io_read_byte_count;
-    if (result > sz)
+    if (result > (int)sz)
     {
         result = sz;
     }
@@ -277,12 +279,14 @@ static int on_io_recv(void *context, unsigned char *buf, size_t sz)
 
 static int on_io_send(void *context, const unsigned char *buf, size_t sz)
 {
+    FUNC_TR;
     int result;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
     if (xio_send(tls_io_instance->socket_io, buf, sz, tls_io_instance->on_send_complete, tls_io_instance->on_send_complete_callback_context) != 0)
     {
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
+printf("JMF: on_io_error @ " MK_ERROR_CONTEXT);
         indicate_error(tls_io_instance);
         result = 0;
     }
@@ -296,6 +300,7 @@ static int on_io_send(void *context, const unsigned char *buf, size_t sz)
 
 static int tlsio_entropy_poll(void *v, unsigned char *output, size_t len, size_t *olen)
 {
+    FUNC_TR;
     srand(time(NULL));
     char *c = (char*)malloc(len);
     memset(c, 0, len);
@@ -309,7 +314,9 @@ static int tlsio_entropy_poll(void *v, unsigned char *output, size_t len, size_t
     return(0);
 }
 
-static void mbedtls_init(void *instance, const char *host) {
+static void mbedtls_init(void *instance, const char *host) 
+{
+    FUNC_TR;
     TLS_IO_INSTANCE *result = (TLS_IO_INSTANCE *)instance;
     char *pers = "azure_iot_client";
 
@@ -330,17 +337,12 @@ static void mbedtls_init(void *instance, const char *host) {
     mbedtls_ssl_set_hostname(&result->ssl, host);
     mbedtls_ssl_set_session(&result->ssl, &result->ssn);
 
-    // DEPRECATED: debug functions do not belong in the tree.
-#if defined (MBED_TLS_DEBUG_ENABLE)
-    mbedtls_ssl_conf_dbg(&result->config, mbedtls_debug, stdout);
-    mbedtls_debug_set_threshold(1);
-#endif
-
     mbedtls_ssl_setup(&result->ssl, &result->config);
 }
 
 CONCRETE_IO_HANDLE tlsio_mbedtls_create(void* io_create_parameters)
 {
+    FUNC_TR;
     TLSIO_CONFIG* tls_io_config = io_create_parameters;
     TLS_IO_INSTANCE* result;
 
@@ -422,6 +424,7 @@ CONCRETE_IO_HANDLE tlsio_mbedtls_create(void* io_create_parameters)
 
 void tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE tls_io)
 {
+    FUNC_TR;
     if (tls_io != NULL)
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
@@ -452,6 +455,7 @@ void tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE tls_io)
 
 int tlsio_mbedtls_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open_complete, void* on_io_open_complete_context, ON_BYTES_RECEIVED on_bytes_received, void* on_bytes_received_context, ON_IO_ERROR on_io_error, void* on_io_error_context)
 {
+    FUNC_TR;
     int result = 0;
 
     if (tls_io == NULL)
@@ -499,6 +503,7 @@ int tlsio_mbedtls_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
 
 int tlsio_mbedtls_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_close_complete, void* callback_context)
 {
+    FUNC_TR;
     int result = 0;
 
     if (tls_io == NULL)
@@ -537,6 +542,7 @@ int tlsio_mbedtls_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_cl
 
 int tlsio_mbedtls_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t size, ON_SEND_COMPLETE on_send_complete, void* callback_context)
 {
+    FUNC_TR;
     int result;
 
     if (tls_io == NULL)
@@ -557,7 +563,7 @@ int tlsio_mbedtls_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t siz
             tls_io_instance->on_send_complete_callback_context = callback_context;
 
             int res = mbedtls_ssl_write(&tls_io_instance->ssl, buffer, size);
-            if (res != size)
+            if (res != (int)size)
             {
                 result = __FAILURE__;
             }
@@ -573,6 +579,7 @@ int tlsio_mbedtls_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t siz
 
 void tlsio_mbedtls_dowork(CONCRETE_IO_HANDLE tls_io)
 {
+    FUNC_TR;
     if (tls_io != NULL)
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
@@ -588,12 +595,20 @@ void tlsio_mbedtls_dowork(CONCRETE_IO_HANDLE tls_io)
 
 const IO_INTERFACE_DESCRIPTION* tlsio_mbedtls_get_interface_description(void)
 {
+    FUNC_TR;
     return &tlsio_mbedtls_interface_description;
+}
+
+const IO_INTERFACE_DESCRIPTION* platform_get_default_tlsio(void)
+{
+    FUNC_TR;
+    return tlsio_mbedtls_get_interface_description();
 }
 
 /*this function will clone an option given by name and value*/
 static void* tlsio_mbedtls_CloneOption(const char* name, const void* value)
 {
+    FUNC_TR;
     void* result;
     if (
         (name == NULL) || (value == NULL)
@@ -632,6 +647,7 @@ static void* tlsio_mbedtls_CloneOption(const char* name, const void* value)
 /*this function destroys an option previously created*/
 static void tlsio_mbedtls_DestroyOption(const char* name, const void* value)
 {
+    FUNC_TR;
     /*since all options for this layer are actually string copies., disposing of one is just calling free*/
     if (name == NULL || value == NULL)
     {
@@ -656,6 +672,7 @@ static void tlsio_mbedtls_DestroyOption(const char* name, const void* value)
 
 OPTIONHANDLER_HANDLE tlsio_mbedtls_retrieveoptions(CONCRETE_IO_HANDLE handle)
 {
+    FUNC_TR;
     OPTIONHANDLER_HANDLE result;
     if (handle == NULL)
     {
@@ -703,6 +720,7 @@ OPTIONHANDLER_HANDLE tlsio_mbedtls_retrieveoptions(CONCRETE_IO_HANDLE handle)
 
 int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, const void* value)
 {
+    FUNC_TR;
     int result;
 
     if (tls_io == NULL || optionName == NULL)
@@ -731,10 +749,6 @@ int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
                 int parse_result = mbedtls_x509_crt_parse(&tls_io_instance->trusted_certificates_parsed, (const unsigned char *)value, (int)(strlen(value) + 1));
                 if (parse_result != 0)
                 {
-char buf[125];
-printf("JMF: parse_result = %d (%d)\n",parse_result,-parse_result);
-mbedtls_strerror(parse_result,buf,125);
-printf("JMF: mbedtsl_strerror = %s\n",buf);
                     LogInfo("Malformed pem certificate");
                     result = __FAILURE__;
                 }
@@ -757,3 +771,4 @@ printf("JMF: mbedtsl_strerror = %s\n",buf);
 
 // DEPRECATED: the USE_MBED_TLS #define is deprecated.
 #endif // USE_MBED_TLS
+
