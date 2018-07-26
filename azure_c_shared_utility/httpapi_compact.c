@@ -694,37 +694,28 @@ static HTTPAPI_RESULT OpenXIOConnection(HTTP_HANDLE_DATA* http_instance)
 
     if (http_instance->is_connected != 0)
     {
-printf("JMF: return HTTPAPI_OK from OpenXIOConnection\n");
         /*Codes_SRS_HTTPAPI_COMPACT_21_033: [ If the whole process succeed, the HTTPAPI_ExecuteRequest shall retur HTTPAPI_OK. ]*/
         result = HTTPAPI_OK;
     }
     else
     {
-printf("JMF: OpenXIOConnection says we are not connected...\n");
-printf("JMF: http_instance->certificate=%s\n",(http_instance->certificate == NULL)? "missing":"AVAILABLE");
-printf("JMF: http_instance->x509ClientCertificate=%s\n", (http_instance->x509ClientCertificate == NULL)? "missing":"AVAILABLE");
-printf("JMF: http_instance->x509ClientPrivateKey=%s\n", (http_instance->x509ClientPrivateKey == NULL)? "missing":"AVAILABLE");
-
         http_instance->is_io_error = 0;
-
         /*Codes_SRS_HTTPAPI_COMPACT_21_022: [ If a Certificate was provided, the HTTPAPI_ExecuteRequest shall set this option on the transport layer. ]*/
-        if ((http_instance->certificate != NULL) &&
-            (xio_setoption(http_instance->xio_handle, "TrustedCerts", http_instance->certificate) != 0))
+        if ((http_instance->certificate != NULL) && (xio_setoption(http_instance->xio_handle, "TrustedCerts", http_instance->certificate) != 0))
         {
+
             /*Codes_SRS_HTTPAPI_COMPACT_21_023: [ If the transport failed setting the Certificate, the HTTPAPI_ExecuteRequest shall not send any request and return HTTPAPI_SET_OPTION_FAILED. ]*/
             result = HTTPAPI_SET_OPTION_FAILED;
             LogInfo("Could not load certificate");
         }
         /*Codes_SRS_HTTPAPI_COMPACT_06_003: [ If the x509 client certificate is provided, the HTTPAPI_ExecuteRequest shall set this option on the transport layer. ]*/
-        else if ((http_instance->x509ClientCertificate != NULL) &&
-            (xio_setoption(http_instance->xio_handle, SU_OPTION_X509_CERT, http_instance->x509ClientCertificate) != 0))
+        else if ((http_instance->x509ClientCertificate != NULL) && (xio_setoption(http_instance->xio_handle, SU_OPTION_X509_CERT, http_instance->x509ClientCertificate) != 0))
         {
             /*Codes_SRS_HTTPAPI_COMPACT_06_005: [ If the transport failed setting the client certificate, the HTTPAPI_ExecuteRequest shall not send any request and return HTTPAPI_SET_OPTION_FAILED. ]*/
             result = HTTPAPI_SET_OPTION_FAILED;
             LogInfo("Could not load the client certificate");
         }
-        else if ((http_instance->x509ClientPrivateKey != NULL) &&
-            (xio_setoption(http_instance->xio_handle, SU_OPTION_X509_PRIVATE_KEY, http_instance->x509ClientPrivateKey) != 0))
+        else if ((http_instance->x509ClientPrivateKey != NULL) && (xio_setoption(http_instance->xio_handle, SU_OPTION_X509_PRIVATE_KEY, http_instance->x509ClientPrivateKey) != 0))
         {
 
             /*Codes_SRS_HTTPAPI_COMPACT_06_006: [ If the transport failed setting the client certificate private key, the HTTPAPI_ExecuteRequest shall not send any request and return HTTPAPI_SET_OPTION_FAILED. ] */
@@ -767,14 +758,12 @@ printf("JMF: http_instance->x509ClientPrivateKey=%s\n", (http_instance->x509Clie
             }
         }
     }
-printf("JMF: OpenXIOConnection #2...\n");
 
     if ((http_instance->is_io_error != 0) && (result == HTTPAPI_OK))
     {
         /*Codes_SRS_HTTPAPI_COMPACT_21_025: [ If the open process failed, the HTTPAPI_ExecuteRequest shall not send any request and return HTTPAPI_OPEN_REQUEST_FAILED. ]*/
         result = HTTPAPI_OPEN_REQUEST_FAILED;
     }
-printf("JMF: OpenXIOConnection #3...\n");
 
     return result;
 }
@@ -1340,7 +1329,6 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
     {
         /*Codes_SRS_HTTPAPI_COMPACT_21_063: [ If the HTTP do not support the optionName, the HTTPAPI_SetOption shall return HTTPAPI_INVALID_ARG. ]*/
         result = HTTPAPI_INVALID_ARG;
-printf("JMF: #1\n");
         LogInfo("unknown option %s", optionName);
     }
     return result;
@@ -1420,7 +1408,6 @@ HTTPAPI_RESULT HTTPAPI_CloneOption(const char* optionName, const void* value, co
     {
         /*Codes_SRS_HTTPAPI_COMPACT_21_071: [ If the HTTP do not support the optionName, the HTTPAPI_CloneOption shall return HTTPAPI_INVALID_ARG. ]*/
         result = HTTPAPI_INVALID_ARG;
-printf("JMF: #4, %s\n",optionName);
         LogInfo("unknown option %s", optionName);
     }
     return result;
