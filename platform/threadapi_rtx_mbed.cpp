@@ -6,6 +6,7 @@
 #include "azure_c_shared_utility/xlogging.h"
 #include "mbed.h"
 
+
 DEFINE_ENUM_STRINGS(THREADAPI_RESULT, THREADAPI_RESULT_VALUES);
 
 #define MAX_THREADS 4
