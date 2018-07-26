@@ -14,7 +14,6 @@
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/entropy_poll.h"
-#include "mylog.h"
 
 #include <stdio.h>
 #include <stdbool.h>

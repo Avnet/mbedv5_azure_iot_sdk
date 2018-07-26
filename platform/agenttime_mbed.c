@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "azure_c_shared_utility/agenttime.h"
-#include "mylog.h"
 
 time_t get_time(time_t* currentTime)
 {

@@ -4,7 +4,6 @@
 #include "mbed.h"
 #include "azure_c_shared_utility/optimize_size.h"
 #include "azure_c_shared_utility/tickcounter.h"
-#include "mylog.h"
 
 // the Mbed OS implements a timer class for timing
 

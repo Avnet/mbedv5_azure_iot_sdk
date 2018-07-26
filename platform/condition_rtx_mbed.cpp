@@ -5,7 +5,6 @@
 #include "azure_c_shared_utility/lock.h"
 #include "azure_c_shared_utility/xlogging.h"
 #include "azure_c_shared_utility/condition.h"
-#include "mylog.h"
 
 // The Mbed OS doesn't use these functions so simply return the appropriate 
 // condition.

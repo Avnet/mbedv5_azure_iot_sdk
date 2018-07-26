@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include "mylog.h"
 
 #include "azure_c_shared_utility/socketio.h"
 #include "azure_c_shared_utility/singlylinkedlist.h"

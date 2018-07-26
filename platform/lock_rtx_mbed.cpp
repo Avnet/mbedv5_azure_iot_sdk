@@ -4,7 +4,6 @@
 #include "azure_c_shared_utility/lock.h"
 #include "azure_c_shared_utility/xlogging.h"
 #include "mbed.h"
-#include "mylog.h"
 
 // the Lock functionallity is the same as a Mutes in the Mbed OS so these
 // API's provide Azure with a common api for manipulating them
