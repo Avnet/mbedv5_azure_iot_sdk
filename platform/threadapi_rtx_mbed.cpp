@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "azure_c_shared_utility/threadapi.h"
 #include "azure_c_shared_utility/xlogging.h"
-#include "rtos.h"
+#include "mbed.h"
 
 DEFINE_ENUM_STRINGS(THREADAPI_RESULT, THREADAPI_RESULT_VALUES);
 
@@ -56,7 +56,11 @@ THREADAPI_RESULT ThreadAPI_Create(THREAD_HANDLE* threadHandle, THREAD_START_FUNC
                 param->func = func;
                 param->arg = arg;
                 param->p_thread = threads + slot;
-                threads[slot].thrd = new Thread(thread_wrapper, param, osPriorityNormal, STACK_SIZE);
+//                threads[slot].thrd = new Thread(thread_wrapper, param, osPriorityNormal, STACK_SIZE);
+
+                threads[slot].thrd = new Thread;
+                threads[slot].thrd->start(Callback<void()>(thread_wrapper, param));
+
                 *threadHandle = (THREAD_HANDLE)(threads + slot);
                 result = THREADAPI_OK;
             }
