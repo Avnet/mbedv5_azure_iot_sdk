@@ -6,7 +6,6 @@
 #include "azure_c_shared_utility/optimize_size.h"
 #include "azure_c_shared_utility/xio.h"
 #include "NTPClient.h"
-#include "mylog.h"
 
 #define TZ_OFFSET	-5   //GMT offset for this timezone
 

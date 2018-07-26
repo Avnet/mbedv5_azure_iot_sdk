@@ -5,7 +5,6 @@
 #include "mbed.h"
 #include "TCPSocket.h"
 #include "azure_c_shared_utility/tcpsocketconnection_c.h"
-#include "mylog.h"
 
 static bool              is_connected = false;
 extern NetworkInterface* platform_network;
