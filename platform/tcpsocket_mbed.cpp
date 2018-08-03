@@ -26,8 +26,13 @@ int tcpsocketconnection_connect(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, cons
 void tcpsocketconnection_set_blocking(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, bool blocking, unsigned int timeout)
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    socket->set_blocking(blocking);
-    socket->set_timeout(timeout);	
+
+    if( !blocking && !timeout )  //blocking == false with timeout == 0 is equivelent to blocking = true;
+        socket->set_blocking(true);
+    else{
+        socket->set_timeout(timeout);	
+        socket->set_blocking(blocking);
+        }
 }
 
 void tcpsocketconnection_destroy(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle)
@@ -61,7 +66,8 @@ int tcpsocketconnection_send_all(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, con
 int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    return socket->recv(data, length);
+    int cnt = socket->recv(data, length);
+    return cnt;
 }
 
 int tcpsocketconnection_receive_all(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
