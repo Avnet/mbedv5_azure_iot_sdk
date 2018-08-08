@@ -27,12 +27,10 @@ void tcpsocketconnection_set_blocking(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
 
-    if( !blocking && !timeout )  //blocking == false with timeout == 0 is equivelent to blocking = true;
+    if( blocking ) 
         socket->set_blocking(true);
-    else{
+    else
         socket->set_timeout(timeout);	
-        socket->set_blocking(blocking);
-        }
 }
 
 void tcpsocketconnection_destroy(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle)
