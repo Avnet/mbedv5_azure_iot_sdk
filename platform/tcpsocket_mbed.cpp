@@ -6,6 +6,8 @@
 #include "TCPSocket.h"
 #include "azure_c_shared_utility/tcpsocketconnection_c.h"
 
+#define MBED_RECEIVE_BYTES_VALUE    128
+
 static bool              is_connected = false;
 extern NetworkInterface* platform_network;
 
@@ -57,14 +59,18 @@ int tcpsocketconnection_send(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const c
 
 int tcpsocketconnection_send_all(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const char* data, int length)
 {
-    TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    return socket->send((char*)data, length);
+    return tcpsocketconnection_send(tcpSocketHandle,data,length);
 }
 
 int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    int cnt = socket->recv(data, length);
+    static char loc_data[MBED_RECEIVE_BYTES_VALUE];
+
+    int cnt = socket->recv(loc_data, MBED_RECEIVE_BYTES_VALUE);
+    if( cnt > 0 )
+        memcpy(data,loc_data,cnt);
+
     return cnt;
 }
 
