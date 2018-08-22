@@ -7,6 +7,10 @@
 #include "azure_c_shared_utility/xio.h"
 #include "NTPClient.h"
 
+#if MBED_CONF_APP_NETWORK_INTERFACE == CELLULAR_BG96
+#include "BG96Interface.h"
+#endif
+
 #define TZ_OFFSET	-5   //GMT offset for this timezone
 
 extern "C" const IO_INTERFACE_DESCRIPTION* tlsio_mbedtls_get_interface_description(void);
@@ -19,11 +23,12 @@ int platform_init(void)
     if (!platform_network) 
         return __FAILURE__;
 
+    printf("[ Platform  ] BG96 SW Revision: %s\n", FIRMWARE_REV(platform_network));
     NTPClient ntp(platform_network);
     time_t timestamp=ntp.get_timestamp();
 
     set_time(timestamp);
-    printf("Time set to %s",ctime(&timestamp));
+    printf("[ Platform  ] Time set to %s\n",ctime(&timestamp));
     return 0;
 }
 
