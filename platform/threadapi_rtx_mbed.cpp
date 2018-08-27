@@ -6,7 +6,6 @@
 #include "azure_c_shared_utility/xlogging.h"
 #include "mbed.h"
 
-#include "jimdbg.h"
 
 DEFINE_ENUM_STRINGS(THREADAPI_RESULT, THREADAPI_RESULT_VALUES);
 
@@ -38,7 +37,6 @@ static void thread_wrapper(const void* createParamArg)
 
 THREADAPI_RESULT ThreadAPI_Create(THREAD_HANDLE* threadHandle, THREAD_START_FUNC func, void* arg)
 {
-JMF_ENTER;
     THREADAPI_RESULT result;
     if ((threadHandle == NULL) || (func == NULL)) {
         result = THREADAPI_INVALID_ARG;
@@ -78,7 +76,6 @@ JMF_ENTER;
         }
     }
 
-JMF_EXIT;
     return result;
 }
 

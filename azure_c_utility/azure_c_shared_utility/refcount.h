@@ -48,14 +48,14 @@ C2(REFCOUNT_, type)
 REFCOUNT_TYPE(type)                                                                                  \
 {                                                                                                    \
     type counted;                                                                                    \
-    COUNT_TYPE count;                                                                                \
+    COUNT_TYPE count;                                                                                  \
 };                                                                                                   \
 static type* REFCOUNT_TYPE_DECLARE_CREATE(type) (void)                                               \
 {                                                                                                    \
     REFCOUNT_TYPE(type)* result = (REFCOUNT_TYPE(type)*)malloc(sizeof(REFCOUNT_TYPE(type)));         \
     if (result != NULL)                                                                              \
     {                                                                                                \
-        INIT_REF(type, result);                                                                      \
+        result->count = 1;                                                                           \
     }                                                                                                \
     return (type*)result;                                                                            \
 }                                                                                                    \
@@ -69,9 +69,6 @@ static type* REFCOUNT_TYPE_DECLARE_CREATE(type) (void)                          
 #ifndef DEC_REF
 #error refcount_os.h does not define DEC_REF
 #endif // !DEC_REF
-#ifndef INIT_REF
-#error refcount_os.h does not define INIT_REF
-#endif // !INIT_REF
 
 #ifdef __cplusplus
 }

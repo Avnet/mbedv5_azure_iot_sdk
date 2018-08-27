@@ -7,19 +7,18 @@
 
 // the Mbed OS implements a timer class for timing
 
-
 TICK_COUNTER_HANDLE tickcounter_create(void)
 {
     Timer* t = new Timer;
     t->start();
-    return (TICK_COUNTER_HANDLE)t;
+    return t;
 }
 
 void tickcounter_destroy(TICK_COUNTER_HANDLE tick_counter)
 {
     Timer* t = (Timer*)tick_counter;
     if (t != NULL)
-        delete t;
+        delete tick_counter;
 }
 
 int tickcounter_get_current_ms(TICK_COUNTER_HANDLE tick_counter, tickcounter_ms_t * current_ms)

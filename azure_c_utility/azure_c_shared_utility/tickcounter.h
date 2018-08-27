@@ -18,7 +18,11 @@ extern "C" {
     typedef uint_fast32_t tickcounter_ms_t;
 #endif
 
-typedef void* TICK_COUNTER_HANDLE;
+#ifdef MBED_H
+    typedef Timer* TICK_COUNTER_HANDLE;
+#else
+    typedef struct TICK_COUNTER_INSTANCE_TAG* TICK_COUNTER_HANDLE;
+#endif
 
     MOCKABLE_FUNCTION(, TICK_COUNTER_HANDLE, tickcounter_create);
     MOCKABLE_FUNCTION(, void, tickcounter_destroy, TICK_COUNTER_HANDLE, tick_counter);
