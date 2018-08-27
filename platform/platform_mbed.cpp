@@ -23,7 +23,9 @@ int platform_init(void)
     if (!platform_network) 
         return __FAILURE__;
 
+    #if MBED_CONF_APP_NETWORK_INTERFACE == CELLULAR_BG96
     printf("[ Platform  ] BG96 SW Revision: %s\n", FIRMWARE_REV(platform_network));
+    #endif
     NTPClient ntp(platform_network);
     time_t timestamp=ntp.get_timestamp();
 

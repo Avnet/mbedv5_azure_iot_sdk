@@ -6,9 +6,7 @@
 #include "TCPSocket.h"
 #include "azure_c_shared_utility/tcpsocketconnection_c.h"
 
-#include "jimdbg.h"
-
-#define MBED_RECEIVE_BYTES_VALUE    512
+#define MBED_RECEIVE_BYTES_VALUE    128
 
 static bool              is_connected = false;
 extern NetworkInterface* platform_network;
@@ -55,7 +53,7 @@ void tcpsocketconnection_close(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle)
 
 int tcpsocketconnection_receive_all(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
 {
-    return tcpsocketconnection_receive(tcpSocketHandle,data,length);
+    return tcpsocketconnection_receive(tcpSocketHandle, data, length);
 }
 
 int tcpsocketconnection_send_all(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const char* data, int length)
@@ -63,71 +61,58 @@ int tcpsocketconnection_send_all(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, con
     return tcpsocketconnection_send(tcpSocketHandle,data,length);
 }
 
-static bool sendingData = false;
-static char *txdata;
-void txdata_cb(void)
-{
-    sendingData = false;
-    free(txdata);
-}
-
 int tcpsocketconnection_send(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const char* data, int length)
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    int sndlen        =  MBED_RECEIVE_BYTES_VALUE;
-
-    if( sendingData )
-        return NSAPI_ERROR_WOULD_BLOCK;
-
-    if( length < sndlen )
-        sndlen = length;
-
-    txdata = (char*)malloc(sndlen);
-    memcpy(txdata,data,sndlen);
-
-    int cnt = socket->send(txdata, sndlen);
-    if( cnt == NSAPI_ERROR_WOULD_BLOCK ) {
-JMF_INFO("Tx'ing data\n");
-        sendingData = true;
-        socket->sigio(txdata_cb);
-        }
-    else if (cnt == sndlen)
-        free(txdata);
-    else{
-        free(txdata);
-        cnt=NSAPI_ERROR_DEVICE_ERROR;
-        }
-
-    return cnt;
+    return socket->send((char*)data, length);
 }
 
-static bool try2getdata = false;
-void rxdata_cb(void)
+static bool gettingData = false;
+static int  left_over_data = 0;
+
+void rxData(void)
 {
-    try2getdata = false;
+    gettingData = false;
 }
 
 int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
 {
-    static char loc_data[MBED_RECEIVE_BYTES_VALUE];
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    int getlen        =  MBED_RECEIVE_BYTES_VALUE;
+    static char loc_data[MBED_RECEIVE_BYTES_VALUE];
+    int    cnt = length;
 
-    if( try2getdata ) {
-        Thread::yield(); //wait for data to be received
-        return NSAPI_ERROR_WOULD_BLOCK;
+    if( left_over_data>0 ) {
+        cnt = left_over_data;
+        left_over_data = 0;
+        memcpy(data, loc_data, cnt);
+        return cnt;
         }
 
-    if( length < getlen )
-        getlen = length;
+    if( gettingData )
+        return 0;
 
-    int cnt = socket->recv(loc_data, getlen);
+    if( cnt > MBED_RECEIVE_BYTES_VALUE )
+        cnt = MBED_RECEIVE_BYTES_VALUE;
+    
+    cnt = socket->recv(loc_data, cnt);
     if( cnt == NSAPI_ERROR_WOULD_BLOCK ) {
-        try2getdata = true;
-        socket->sigio(rxdata_cb);
+        gettingData = true;
+        socket->sigio(rxData);
         }
-    else if( cnt > 0 )
-        memcpy(data,loc_data,cnt);
+    else if ( cnt == NSAPI_ERROR_TIMEOUT )
+        printf("Poor signal strength? RX timed out.\n");
+
+    if( cnt > 0 ) {
+        if( cnt > length ) {
+            memcpy(data,loc_data,length);
+            memcpy(loc_data, &loc_data[length], cnt-length);
+            left_over_data = cnt-length;
+printf("JMF:have %d bytes received that weren't asked for\n",left_over_data);
+            }
+         else
+            memcpy(data,loc_data,cnt);
+        }
+
     return cnt;
 }
 

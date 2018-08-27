@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// DEPRECATED: the USE_MBED_TLS #define is deprecated.
+#ifdef USE_MBED_TLS
+
 #include <stdlib.h>
 
 #include "mbedtls/config.h"
@@ -11,8 +14,6 @@
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/entropy_poll.h"
-
-#include "jimdbg.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -112,9 +113,7 @@ static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
         {
             if (tls_io_instance->on_bytes_received != NULL)
             {
-printf("JMF2:in decode_ssl_received_bytes\n");
                 tls_io_instance->on_bytes_received(tls_io_instance->on_bytes_received_context, buffer, rcv_bytes);
-printf("JMF2:processed %d bytes in on_bytes_received\n",rcv_bytes);
             }
         }
     }
@@ -158,18 +157,8 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT open_re
 static void on_underlying_io_bytes_received(void* context, const unsigned char* buffer, size_t size)
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
-    unsigned char* new_socket_io_read_bytes;
-    int i=tls_io_instance->socket_io_read_byte_count;
-extern bool mem_trace_enable; //jmf
 
-    if( !tls_io_instance->socket_io_read_bytes ) {
-//jmf mem_trace_enable = true;
-        printf("JMF:we have a NULL ptr and think it has %d bytes, we need %d.\n",i,size);
-        new_socket_io_read_bytes = (unsigned char*)malloc( i+size);
-        printf("JMF:%s\n",new_socket_io_read_bytes?"GOT IT":"malloc failed!");
-        }
-    else
-        new_socket_io_read_bytes = (unsigned char*)realloc(tls_io_instance->socket_io_read_bytes, i+size);
+    unsigned char* new_socket_io_read_bytes = (unsigned char*)realloc(tls_io_instance->socket_io_read_bytes, tls_io_instance->socket_io_read_byte_count + size);
 
     if (new_socket_io_read_bytes == NULL)
     {
@@ -179,10 +168,8 @@ extern bool mem_trace_enable; //jmf
     else
     {
         tls_io_instance->socket_io_read_bytes = new_socket_io_read_bytes;
-printf("JMF:copy buffer to buffer starting at position %d, copy %d bytes\n",tls_io_instance->socket_io_read_byte_count,size);
         (void)memcpy(tls_io_instance->socket_io_read_bytes + tls_io_instance->socket_io_read_byte_count, buffer, size);
         tls_io_instance->socket_io_read_byte_count += size;
-printf("JMF:copy done!\n");
     }
 }
 
@@ -248,14 +235,6 @@ static int on_io_recv(void *context, unsigned char *buf, size_t sz)
 
     if (result > 0)
     {
-if( !tls_io_instance->socket_io_read_bytes ) {
-printf("JMF:trying to read a NULL pointer [%s]\n",__FILE__);
-}
-if( !buf) {
-printf("JMF:trying to write a NULL pointer (buf) [%s]\n",__FILE__);
-}
-
-
         (void)memcpy((void *)buf, tls_io_instance->socket_io_read_bytes, result);
         (void)memmove(tls_io_instance->socket_io_read_bytes, tls_io_instance->socket_io_read_bytes + result, tls_io_instance->socket_io_read_byte_count - result);
         tls_io_instance->socket_io_read_byte_count -= result;
@@ -759,4 +738,6 @@ int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
     return result;
 }
 
+// DEPRECATED: the USE_MBED_TLS #define is deprecated.
+#endif // USE_MBED_TLS
 
