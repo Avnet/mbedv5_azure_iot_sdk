@@ -68,7 +68,7 @@ int tcpsocketconnection_send(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const c
 }
 
 static bool gettingData = false;
-static int  left_over_data = 0;
+static int  bufCnt = 0;
 
 void rxData(void)
 {
@@ -79,39 +79,37 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
     static char loc_data[MBED_RECEIVE_BYTES_VALUE];
-    int    cnt = length;
-
-    if( left_over_data>0 ) {
-        cnt = left_over_data;
-        left_over_data = 0;
-        memcpy(data, loc_data, cnt);
-        return cnt;
-        }
+    int    cnt, ocnt = length; 
 
     if( gettingData )
-        return 0;
+        return NSAPI_ERROR_WOULD_BLOCK;
 
-    if( cnt > MBED_RECEIVE_BYTES_VALUE )
-        cnt = MBED_RECEIVE_BYTES_VALUE;
+    if( ocnt > MBED_RECEIVE_BYTES_VALUE-bufCnt )
+        ocnt = MBED_RECEIVE_BYTES_VALUE-bufCnt;
     
-    cnt = socket->recv(loc_data, cnt);
+    cnt = socket->recv(&loc_data[bufCnt], ocnt);
     if( cnt == NSAPI_ERROR_WOULD_BLOCK ) {
         gettingData = true;
         socket->sigio(rxData);
         }
-    else if ( cnt == NSAPI_ERROR_TIMEOUT )
-        printf("Poor signal strength? RX timed out.\n");
 
-    if( cnt > 0 ) {
+    if( cnt > 0 || bufCnt > 0) {
+        cnt += bufCnt;
+        printf("      JMF:we have %3d bytes to return,asked for %3d. ",cnt,length);
         if( cnt > length ) {
-            memcpy(data,loc_data,length);
-            memcpy(loc_data, &loc_data[length], cnt-length);
-            left_over_data = cnt-length;
-printf("JMF:have %d bytes received that weren't asked for\n",left_over_data);
-            }
-         else
+            bufCnt = cnt-length;
+            cnt = length;
             memcpy(data,loc_data,cnt);
-        }
+            memcpy(loc_data, &loc_data[length], bufCnt);
+            printf("We have %d more bytes than asked for, ",bufCnt);
+            }
+         else if (cnt < length ) {
+            memcpy(data,loc_data,cnt);
+            }
+         else if (cnt == length)
+            memcpy(data,loc_data,cnt);
+         printf("returning %d bytes\n",cnt);
+         }
 
     return cnt;
 }
