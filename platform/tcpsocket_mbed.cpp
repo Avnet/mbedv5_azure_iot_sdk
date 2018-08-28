@@ -68,7 +68,9 @@ int tcpsocketconnection_send(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const c
 }
 
 static bool gettingData = false;
+
 static int  bufCnt = 0;
+
 
 void rxData(void)
 {
@@ -79,6 +81,7 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
     static char loc_data[MBED_RECEIVE_BYTES_VALUE];
+
     int    cnt, ocnt = length; 
 
     if( gettingData )
@@ -110,7 +113,6 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
             memcpy(data,loc_data,cnt);
          printf("returning %d bytes\n",cnt);
          }
-
     return cnt;
 }
 
