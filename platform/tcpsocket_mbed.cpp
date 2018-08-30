@@ -98,20 +98,20 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
 
     if( cnt > 0 || bufCnt > 0) {
         cnt += bufCnt;
-        printf("      JMF:we have %3d bytes to return,asked for %3d. ",cnt,length);
+//        printf("      JMF:we have %3d bytes to return,asked for %3d. ",cnt,length);
         if( cnt > length ) {
             bufCnt = cnt-length;
             cnt = length;
             memcpy(data,loc_data,cnt);
             memcpy(loc_data, &loc_data[length], bufCnt);
-            printf("We have %d more bytes than asked for, ",bufCnt);
+//            printf("We have %d more bytes than asked for, ",bufCnt);
             }
          else if (cnt < length ) {
             memcpy(data,loc_data,cnt);
             }
          else if (cnt == length)
             memcpy(data,loc_data,cnt);
-         printf("returning %d bytes\n",cnt);
+//         printf("returning %d bytes\n",cnt);
          }
     return cnt;
 }
