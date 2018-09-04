@@ -6,6 +6,8 @@
 #include "TCPSocket.h"
 #include "azure_c_shared_utility/tcpsocketconnection_c.h"
 
+#include "azure_c_shared_utility/platform.h"
+
 #define MBED_RECEIVE_BYTES_VALUE    128
 
 static bool              is_connected = false;
@@ -68,8 +70,9 @@ int tcpsocketconnection_send(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, const c
 }
 
 static bool gettingData = false;
+static Timer gettingData_timer;
 
-static int  bufCnt = 0;
+static int  ioBufCnt = 0;
 
 
 void rxData(void)
@@ -80,38 +83,59 @@ void rxData(void)
 int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
-    static char loc_data[MBED_RECEIVE_BYTES_VALUE];
+    static char ioBuffer[MBED_RECEIVE_BYTES_VALUE];
 
     int    cnt, ocnt = length; 
 
-    if( gettingData )
+    if( ioBufCnt > 0 ) {
+        cnt = ioBufCnt;
+        ioBufCnt = 0;
+        printf("      JMF: ");
+        if( cnt > length ) {
+            memcpy(data,ioBuffer,length);
+            ioBufCnt = cnt-length;
+            cnt = length;
+            }
+        else if (cnt <= length ) 
+            memcpy(data,ioBuffer,cnt);
+        return cnt;
+        }
+
+    if( gettingData && gettingData_timer.read_ms() < 60000 ) 
         return NSAPI_ERROR_WOULD_BLOCK;
 
-    if( ocnt > MBED_RECEIVE_BYTES_VALUE-bufCnt )
-        ocnt = MBED_RECEIVE_BYTES_VALUE-bufCnt;
+    gettingData = false;
+    gettingData_timer.reset();
+    gettingData_timer.stop();
+
+    if( ocnt > MBED_RECEIVE_BYTES_VALUE-ioBufCnt )
+        ocnt = MBED_RECEIVE_BYTES_VALUE-ioBufCnt;
     
-    cnt = socket->recv(&loc_data[bufCnt], ocnt);
+    cnt = socket->recv(&ioBuffer[ioBufCnt], ocnt);
     if( cnt == NSAPI_ERROR_WOULD_BLOCK ) {
         gettingData = true;
+        gettingData_timer.reset();
+        gettingData_timer.start();
         socket->sigio(rxData);
         }
 
-    if( cnt > 0 || bufCnt > 0) {
-        cnt += bufCnt;
-//        printf("      JMF:we have %3d bytes to return,asked for %3d. ",cnt,length);
-        if( cnt > length ) {
-            bufCnt = cnt-length;
+    if( cnt > 0 ) {
+        cnt += ioBufCnt;
+        ioBufCnt = 0;
+       if( cnt > length ) {
+            memcpy(data,ioBuffer,length);
+            ioBufCnt = cnt-length;
+            memcpy(ioBuffer,&ioBuffer[length],ioBufCnt);
             cnt = length;
-            memcpy(data,loc_data,cnt);
-            memcpy(loc_data, &loc_data[length], bufCnt);
-//            printf("We have %d more bytes than asked for, ",bufCnt);
+
             }
          else if (cnt < length ) {
-            memcpy(data,loc_data,cnt);
+            memcpy(data,ioBuffer,cnt);
             }
          else if (cnt == length)
-            memcpy(data,loc_data,cnt);
-//         printf("returning %d bytes\n",cnt);
+
+            memcpy(data,ioBuffer,cnt);
+
          }
     return cnt;
 }
