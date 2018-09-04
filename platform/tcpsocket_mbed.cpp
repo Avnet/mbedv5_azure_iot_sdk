@@ -118,20 +118,24 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
         gettingData_timer.start();
         socket->sigio(rxData);
         }
+
     if( cnt > 0 ) {
         cnt += ioBufCnt;
         ioBufCnt = 0;
-        if( cnt > length ) {
+       if( cnt > length ) {
             memcpy(data,ioBuffer,length);
             ioBufCnt = cnt-length;
             memcpy(ioBuffer,&ioBuffer[length],ioBufCnt);
             cnt = length;
+
             }
          else if (cnt < length ) {
             memcpy(data,ioBuffer,cnt);
             }
          else if (cnt == length)
+
             memcpy(data,ioBuffer,cnt);
+
          }
     return cnt;
 }
