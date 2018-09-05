@@ -80,7 +80,6 @@ void rxData(void)
     gettingData = false;
 }
 
-static int occured = 0;
 int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char* data, int length)
 {
     TCPSocket* socket = (TCPSocket*)tcpSocketHandle;
@@ -91,16 +90,13 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
     if( ioBufCnt > 0 ) {
         cnt = ioBufCnt;
         ioBufCnt = 0;
-//        printf("      JMF: ");
         if( cnt > length ) {
-//            printf("we have %3d bytes to return left in buffer,asked for %3d. ",cnt,length);
             memcpy(data,ioBuffer,length);
             ioBufCnt = cnt-length;
             cnt = length;
             }
         else if (cnt <= length ) 
             memcpy(data,ioBuffer,cnt);
-//        printf("returning the %d bytes in buffer\n",cnt);
         return cnt;
         }
 
@@ -108,7 +104,6 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
         gettingData_timer.reset();
         printf("ERROR: socket read request isn't responding!\n");
         gettingData = false;
-//        socket->close();
         return NSAPI_ERROR_DEVICE_ERROR;  //driver gave no response for >60 seconds
         }
 
@@ -132,10 +127,7 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
     if( cnt > 0 ) {
         cnt += ioBufCnt;
         ioBufCnt = 0;
-//        printf("      JMF: ");
         if( cnt > length ) {
-occured++;
-//            printf("we have %3d bytes to return,asked for %3d. ",cnt,length);
             memcpy(data,ioBuffer,length);
             ioBufCnt = cnt-length;
             memcpy(ioBuffer,&ioBuffer[length],ioBufCnt);
@@ -146,7 +138,6 @@ occured++;
             }
          else if (cnt == length)
             memcpy(data,ioBuffer,cnt);
-//         printf("returning %d bytes (%d)\n",cnt,occured);
          }
     return cnt;
 }
