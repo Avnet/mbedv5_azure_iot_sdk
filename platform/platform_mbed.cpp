@@ -34,6 +34,15 @@ int platform_init(void)
     return 0;
 }
 
+int platform_RSSI(void)
+{
+    int rssi=0;
+    #if MBED_CONF_APP_NETWORK_INTERFACE == CELLULAR_BG96
+    rssi=BG96_RSSI(platform_network);
+    #endif
+    return rssi;
+}
+
 STRING_HANDLE platform_get_platform_info(void)
 {
     // Expected format: "(<runtime name>; <operating system name>; <platform>)"

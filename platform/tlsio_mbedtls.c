@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // DEPRECATED: the USE_MBED_TLS #define is deprecated.
-//#ifdef USE_MBED_TLS
+#ifdef USE_MBED_TLS
 
 #include <stdlib.h>
 
@@ -739,5 +739,5 @@ int tlsio_mbedtls_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
 }
 
 // DEPRECATED: the USE_MBED_TLS #define is deprecated.
-//#endif // USE_MBED_TLS
+#endif // USE_MBED_TLS
 
