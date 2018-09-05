@@ -90,7 +90,6 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
     if( ioBufCnt > 0 ) {
         cnt = ioBufCnt;
         ioBufCnt = 0;
-        printf("      JMF: ");
         if( cnt > length ) {
             memcpy(data,ioBuffer,length);
             ioBufCnt = cnt-length;
@@ -101,7 +100,14 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
         return cnt;
         }
 
-    if( gettingData && gettingData_timer.read_ms() < 60000 ) 
+    if( gettingData_timer.read_ms() > 60000 ) {
+        gettingData_timer.reset();
+        printf("ERROR: socket read request isn't responding!\n");
+        gettingData = false;
+        return NSAPI_ERROR_DEVICE_ERROR;  //driver gave no response for >60 seconds
+        }
+
+    if( gettingData )
         return NSAPI_ERROR_WOULD_BLOCK;
 
     gettingData = false;
@@ -118,24 +124,20 @@ int tcpsocketconnection_receive(TCPSOCKETCONNECTION_HANDLE tcpSocketHandle, char
         gettingData_timer.start();
         socket->sigio(rxData);
         }
-
     if( cnt > 0 ) {
         cnt += ioBufCnt;
         ioBufCnt = 0;
-       if( cnt > length ) {
+        if( cnt > length ) {
             memcpy(data,ioBuffer,length);
             ioBufCnt = cnt-length;
             memcpy(ioBuffer,&ioBuffer[length],ioBufCnt);
             cnt = length;
-
             }
          else if (cnt < length ) {
             memcpy(data,ioBuffer,cnt);
             }
          else if (cnt == length)
-
             memcpy(data,ioBuffer,cnt);
-
          }
     return cnt;
 }
