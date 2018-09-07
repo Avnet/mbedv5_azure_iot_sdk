@@ -203,7 +203,6 @@ static void on_underlying_io_error(void* context)
 static void on_underlying_io_close_complete_during_close(void* context)
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
-
     tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
 
     if (tls_io_instance->on_io_close_complete != NULL)
@@ -266,6 +265,9 @@ static int on_io_send(void *context, const unsigned char *buf, size_t sz)
 {
     int result;
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
+
+    if( tls_io_instance->tlsio_state == TLSIO_STATE_NOT_OPEN )  //for some reason, people call this after closing the connection
+        return sz;                                              //so just exit...
 
     if (xio_send(tls_io_instance->socket_io, buf, sz, tls_io_instance->on_send_complete, tls_io_instance->on_send_complete_callback_context) != 0)
     {
@@ -408,6 +410,9 @@ void tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE tls_io)
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
 
+        xio_close(tls_io_instance->socket_io, NULL, NULL);
+        xio_destroy(tls_io_instance->socket_io);
+
         // mbedTLS cleanup...
         mbedtls_ssl_close_notify(&tls_io_instance->ssl);
         mbedtls_ssl_free(&tls_io_instance->ssl);
@@ -416,14 +421,11 @@ void tlsio_mbedtls_destroy(CONCRETE_IO_HANDLE tls_io)
         mbedtls_ctr_drbg_free(&tls_io_instance->ctr_drbg);
         mbedtls_entropy_free(&tls_io_instance->entropy);
 
-        xio_close(tls_io_instance->socket_io, NULL, NULL);
-
         if (tls_io_instance->socket_io_read_bytes != NULL)
         {
             free(tls_io_instance->socket_io_read_bytes);
         }
 
-        xio_destroy(tls_io_instance->socket_io);
         if (tls_io_instance->trusted_certificates != NULL)
         {
             free(tls_io_instance->trusted_certificates);

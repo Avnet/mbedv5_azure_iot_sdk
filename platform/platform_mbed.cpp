@@ -51,5 +51,5 @@ STRING_HANDLE platform_get_platform_info(void)
 
 void platform_deinit(void)
 {
-    return;
+    platform_network->disconnect();
 }

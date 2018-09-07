@@ -116,17 +116,5 @@ void ThreadAPI_Exit(int res)
 
 void ThreadAPI_Sleep(unsigned int millisec)
 {
-    //
-    // The timer on mbed seems to wrap around 65 seconds. Hmmm.
-    // So we will do our waits in increments of 30 seconds.
-    //
-    const int thirtySeconds = 30000;
-    int numberOfThirtySecondWaits = millisec / thirtySeconds;
-    int remainderOfThirtySeconds = millisec % thirtySeconds;
-    int i;
-    for (i = 1; i <= numberOfThirtySecondWaits; i++)
-    {
-        Thread::wait(thirtySeconds);
-    }
-    Thread::wait(remainderOfThirtySeconds);
+    Thread::wait(millisec);
 }
