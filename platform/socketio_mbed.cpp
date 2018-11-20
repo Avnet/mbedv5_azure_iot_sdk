@@ -85,15 +85,14 @@ static void socketio_DestroyOption(const char* name, const void* value)
 
 static OPTIONHANDLER_HANDLE socketio_retrieveoptions(CONCRETE_IO_HANDLE socket_io)
 {
-    /* Not implementing any options */
     (void)socket_io;
-    return NULL;
+    return OptionHandler_Create(socketio_CloneOption, socketio_DestroyOption, socketio_setoption);
 }
 
 int socketio_setoption(CONCRETE_IO_HANDLE socket_io, const char* optionName, const void* value)
 {
     /* Not implementing any options */
-    return __FAILURE__;
+    return 0;
 }
 
 const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void)
