@@ -30,7 +30,7 @@ typedef struct _create_param
 static void thread_wrapper(const void* createParamArg)
 {
     const create_param* p = (const create_param*)createParamArg;
-    p->p_thread->id = Thread::gettid();
+    p->p_thread->id = ThisThread::get_id(); //Thread::gettid();
     (*(p->func))((void*)p->arg);
     free((void*)p);
 }
@@ -107,7 +107,7 @@ void ThreadAPI_Exit(int res)
 {
     mbedThread* p;
     for (p = threads; p < &threads[MAX_THREADS]; p++) {
-        if (p->id == Thread::gettid()) {
+        if (p->id == ThisThread::get_id() ) {
             p->result.put((int*)res);
             break;
         }
@@ -116,5 +116,5 @@ void ThreadAPI_Exit(int res)
 
 void ThreadAPI_Sleep(unsigned int millisec)
 {
-    Thread::wait(millisec);
+    ThisThread::sleep_for(millisec); //Thread::wait(millisec);
 }
