@@ -15,7 +15,7 @@ double get_difftime(time_t stopTime, time_t startTime)
 
 struct tm* get_gmtime(time_t* currentTime)
 {
-    struct tm result;
+    static struct tm result;
     return gmtime_r(currentTime, &result);
 }
 
